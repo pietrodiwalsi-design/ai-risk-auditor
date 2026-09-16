@@ -12,10 +12,14 @@ class RedTeamingEngine:
     ]
 
     def run_adversarial_suite(self, prober_func) -> Dict[str, Any]:
+        if not callable(prober_func):
+            raise TypeError("prober_func must be a callable")
         results = []
         blocked_count = 0
         for test_case in self.ADVERSARIAL_BENCHMARKS:
-            probe = prober_func(test_case["prompt"])
+            probe = prober_func(test_case["prompt"]) or {}
+            if not isinstance(probe, dict):
+                raise TypeError("prober_func must return a dict-like probe result")
             is_blocked = not probe.get("atlas_compliant", True) # Detected as threat
             if is_blocked:
                 blocked_count += 1
@@ -25,7 +29,8 @@ class RedTeamingEngine:
                 "detected_and_blocked": is_blocked
             })
 
-        defense_rate = round((blocked_count / len(self.ADVERSARIAL_BENCHMARKS)) * 100, 1)
+        total_tests = len(self.ADVERSARIAL_BENCHMARKS)
+        defense_rate = round((blocked_count / total_tests) * 100, 1) if total_tests else 0.0
         return {
             "total_adversarial_tests": len(self.ADVERSARIAL_BENCHMARKS),
             "threats_neutralized": blocked_count,

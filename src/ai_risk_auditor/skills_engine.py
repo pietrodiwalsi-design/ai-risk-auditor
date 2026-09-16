@@ -9,13 +9,21 @@ class SkillsReferenceEngine:
 
     def lookup_mitigation_skills(self, threat_category: str) -> List[Dict[str, Any]]:
         """Maps NIST and MITRE threat categories to structured actionable agent skill procedures."""
+        if threat_category is None:
+            threat_category = ""
+        if not isinstance(threat_category, str):
+            raise TypeError("threat_category must be a string")
+        threat_category_lower = threat_category.lower()
+
         matched_skills = []
-        if os.path.exists(self.SKILLS_DIR):
-            for root, _, files in os.walk(self.SKILLS_DIR):
+        if os.path.isdir(self.SKILLS_DIR):
+            for root, dirs, files in os.walk(self.SKILLS_DIR, followlinks=False):
+                if len(matched_skills) >= 5:
+                    break
                 for f in files:
                     if f.endswith(('.json', '.md')):
                         name_lower = f.lower()
-                        if threat_category.lower() in name_lower or "prompt" in name_lower or "injection" in name_lower:
+                        if threat_category_lower in name_lower or "prompt" in name_lower or "injection" in name_lower:
                             matched_skills.append({
                                 "skill_file": f,
                                 "framework_mapping": "NIST AI RMF / MITRE ATLAS",
@@ -23,7 +31,7 @@ class SkillsReferenceEngine:
                             })
                         if len(matched_skills) >= 5:
                             break
-        
+
         if not matched_skills:
             matched_skills = [
                 {"skill_file": "prompt_injection_defense.md", "framework_mapping": "MITRE ATLAS AML.T0054", "path": "skills/ai_safety/prompt_injection_defense.md"},

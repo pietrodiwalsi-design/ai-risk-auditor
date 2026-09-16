@@ -6,6 +6,9 @@ class NISTAIRMFAuditor:
     FUNCTIONS = ["GOVERN", "MAP", "MEASURE", "MANAGE"]
 
     def evaluate_system(self, system_profile: Dict[str, Any]) -> Dict[str, Any]:
+        system_profile = system_profile or {}
+        if not isinstance(system_profile, dict):
+            raise TypeError("system_profile must be a dict")
         has_human_oversight = system_profile.get("human_oversight", False)
         has_eval_metrics = system_profile.get("eval_metrics_defined", False)
         has_incident_plan = system_profile.get("incident_response_plan", False)
